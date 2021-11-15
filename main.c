@@ -277,7 +277,11 @@ int main(void)
     }
     /* Main Loop End */
     
-    KEEP();/* 抜けた後、データ保存処理 */
+    if (D_INISQ > 0) {
+        /* データ読み出し完了していた場合 */
+        KEEP();/* 抜けた後、データ保存処理 */
+        
+    }
     CPUERR();/* "Good bye!" */
     
 }

@@ -5,7 +5,7 @@
 **/
 #include "tmpm380_ADCONV.h"
 
-ADC_Result result[2];/* ADCˆêŠi”[—p•Ï”ŒS */
+ADC_Result result[3];/* ADCˆêŠi”[—p•Ï”ŒS */
 
 const short TCNVTB[4096] = {
     /* T”M‰·“xƒe[ƒuƒ‹ */
