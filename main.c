@@ -25,9 +25,9 @@ int main(void)
     TSB_PE->IE  = 0xC2;/* PE1を入力ﾎﾟｰﾄに設定する */
     
     /* 出力ポートに設定****************************************************** */
+    TSB_PA->DATA |= 0xC0;/* LCD/VFDの制御線（E除く）をHIGHにする */
+    TSB_PA->DATA &= 0xC7;/* LED出力をマスクする */
     TSB_PA->CR |= 0xFE;/* PA1~PA7を出力ﾎﾟｰﾄにする */
-    TSB_PA->DATA |= 0xE0;/* LCD/VFDの制御線をHIGHにする */
-    TSB_PA->DATA &= 0xE7;/* LED出力をマスクする */
     
     TSB_PC->CR |= 0xFC;/* PC2~PC7を出力ﾎﾟｰﾄにする */
     TSB_PC->DATA &= 0x03;/* 出力クリア */

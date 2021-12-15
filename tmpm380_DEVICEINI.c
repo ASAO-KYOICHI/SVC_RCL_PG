@@ -30,7 +30,7 @@ void DEVICE_INIT(void)
             count01 = 0;
             WDTCLR();/* 外付けウォッチドッグタイマーのクリア */
             
-            DIPBUF = (MXIN1 & 0xF0);/* 現在ディップスイッチの値を代入する */
+            DIPBUF = (~MXIN1 & 0xF0);/* 現在ディップスイッチの値を代入する */
             
             while (count01 < 5);/* 5ms待ちます */
             TSB_WD->CR = 0x0000004E;/*WDTのクリアコードを書き込む*/
@@ -47,7 +47,7 @@ void DEVICE_INIT(void)
             count01 = 0;
             WDTCLR();/* 外付けウォッチドッグタイマーのクリア */
             
-            if ((MXIN1 & 0xF0) == DIPBUF) {
+            if ((~MXIN1 & 0xF0) == DIPBUF) {
                 /* ﾃﾞｨｯﾌﾟｽｲｯﾁの取り込みが正常である場合 */
                 SYKND0 = DIPBUF;/* 機器情報に保存する */
                 break;/* 抜けます */
@@ -498,23 +498,28 @@ void DEVICE_INIT(void)
         SBI_SetI2CACK(TSB_SBI0, ENABLE);/* 読込みの最後でACKを無効化しているため、ここで有効にする */
         T0BF1 = 0;
         
-        REG_00 = (RTCDT[0] & 0x0F);
-        REG_01 = ((RTCDT[0] & 0xF0) >> 4) * 10;
+        REG_00 = (RTCD_R[0] & 0x0F);
+        REG_01 = ((RTCD_R[0] & 0xF0) >> 4) * 10;
         RTCDT[0] = REG_00 + REG_01;/* 秒　BCD→バイナリ変換 */
-        REG_00 = (RTCDT[1] & 0x0F);
-        REG_01 = ((RTCDT[1] & 0xF0) >> 4) * 10;
+        
+        REG_00 = (RTCD_R[1] & 0x0F);
+        REG_01 = ((RTCD_R[1] & 0xF0) >> 4) * 10;
         RTCDT[1] = REG_00 + REG_01;/* 分　BCD→バイナリ変換 */
-        REG_00 = (RTCDT[2] & 0x0F);
-        REG_01 = ((RTCDT[2] & 0xF0) >> 4) * 10;
+        
+        REG_00 = (RTCD_R[2] & 0x0F);
+        REG_01 = ((RTCD_R[2] & 0xF0) >> 4) * 10;
         RTCDT[2] = REG_00 + REG_01;/* 時　BCD→バイナリ変換 */
-        REG_00 = (RTCDT[4] & 0x0F);
-        REG_01 = ((RTCDT[4] & 0xF0) >> 4) * 10;
+        
+        REG_00 = (RTCD_R[4] & 0x0F);
+        REG_01 = ((RTCD_R[4] & 0xF0) >> 4) * 10;
         RTCDT[4] = REG_00 + REG_01;/* 日　BCD→バイナリ変換 */
-        REG_00 = (RTCDT[5] & 0x0F);
-        REG_01 = ((RTCDT[5] & 0xF0) >> 4) * 10;
+        
+        REG_00 = (RTCD_R[5] & 0x0F);
+        REG_01 = ((RTCD_R[5] & 0xF0) >> 4) * 10;
         RTCDT[5] = REG_00 + REG_01;/* 月　BCD→バイナリ変換 */
-        REG_00 = (RTCDT[6] & 0x0F);
-        REG_01 = ((RTCDT[6] & 0xF0) >> 4) * 10;
+        
+        REG_00 = (RTCD_R[6] & 0x0F);
+        REG_01 = ((RTCD_R[6] & 0xF0) >> 4) * 10;
         RTCDT[6] = REG_00 + REG_01;/* 年　BCD→バイナリ変換 */
         
         RTC_VAL_CHK();/* 取り出した時刻がおかしくないかチェック */
@@ -748,24 +753,36 @@ void DEVICE_INIT(void)
                     RTC_ERR &= 0x7F;/* 受信できたので一旦RTC異常をクリアする */
                     
                     SBI_SetI2CACK(TSB_SBI0, ENABLE);/* 読込みの最後でACKを無効化しているため、ここで有効にする */
-                    REG_00 = (RTCDT[0] & 0x0F);
-                    REG_01 = (RTCDT[0] >> 4) * 10;
-                    RTCDT[0] = REG_00 + REG_01;/* 秒　BCD→バイナリ変換 */
-                    REG_00 = (RTCDT[1] & 0x0F);
-                    REG_01 = ((RTCDT[1] & 0xF0) >> 4) * 10;
-                    RTCDT[1] = REG_00 + REG_01;/* 分　BCD→バイナリ変換 */
-                    REG_00 = (RTCDT[2] & 0x0F);
-                    REG_01 = ((RTCDT[2] & 0xF0) >> 4) * 10;
-                    RTCDT[2] = REG_00 + REG_01;/* 時　BCD→バイナリ変換 */
-                    REG_00 = (RTCDT[4] & 0x0F);
-                    REG_01 = ((RTCDT[4] & 0xF0) >> 4) * 10;
-                    RTCDT[4] = REG_00 + REG_01;/* 日　BCD→バイナリ変換 */
-                    REG_00 = (RTCDT[5] & 0x0F);
-                    REG_01 = ((RTCDT[5] & 0xF0) >> 4) * 10;
-                    RTCDT[5] = REG_00 + REG_01;/* 月　BCD→バイナリ変換 */
-                    REG_00 = (RTCDT[6] & 0x0F);
-                    REG_01 = ((RTCDT[6] & 0xF0) >> 4) * 10;
-                    RTCDT[6] = REG_00 + REG_01;/* 年　BCD→バイナリ変換 */
+                    
+                    REG_00 = REG_01 = 0;/* 一旦クリア */
+                    REG_00 = (RTCD_R[0] & 0x0F);
+                    REG_01 = (RTCD_R[0] >> 4) * 10;
+                    RTCDT[0] = (REG_00 + REG_01);/* 秒　BCD→バイナリ変換 */
+                    
+                    REG_00 = REG_01 = 0;/* 一旦クリア */
+                    REG_00 = (RTCD_R[1] & 0x0F);
+                    REG_01 = ((RTCD_R[1] & 0xF0) >> 4) * 10;
+                    RTCDT[1] = (REG_00 + REG_01);/* 分　BCD→バイナリ変換 */
+                    
+                    REG_00 = REG_01 = 0;/* 一旦クリア */
+                    REG_00 = (RTCD_R[2] & 0x0F);
+                    REG_01 = ((RTCD_R[2] & 0xF0) >> 4) * 10;
+                    RTCDT[2] = (REG_00 + REG_01);/* 時　BCD→バイナリ変換 */
+                    
+                    REG_00 = REG_01 = 0;/* 一旦クリア */
+                    REG_00 = (RTCD_R[4] & 0x0F);
+                    REG_01 = ((RTCD_R[4] & 0xF0) >> 4) * 10;
+                    RTCDT[4] = (REG_00 + REG_01);/* 日　BCD→バイナリ変換 */
+                    
+                    REG_00 = REG_01 = 0;/* 一旦クリア */
+                    REG_00 = (RTCD_R[5] & 0x0F);
+                    REG_01 = ((RTCD_R[5] & 0xF0) >> 4) * 10;
+                    RTCDT[5] = (REG_00 + REG_01);/* 月　BCD→バイナリ変換 */
+                    
+                    REG_00 = REG_01 = 0;/* 一旦クリア */
+                    REG_00 = (RTCD_R[6] & 0x0F);
+                    REG_01 = ((RTCD_R[6] & 0xF0) >> 4) * 10;
+                    RTCDT[6] = (REG_00 + REG_01);/* 年　BCD→バイナリ変換 */
                     
                     RTC_VAL_CHK();/* RTCの値チェック実施 */
                     

@@ -69,7 +69,8 @@ void DCONT(void)
             TSB_PA->DATA &= 0x1F;/* LCD,VFDのE/RW/RSをオフする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
-            TSB_PF->DATA |= 0x03;/* LCDデータバス出力をセット、初期化コマンド */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
+            TSB_PF->DATA |= 0x03;/* LCDデータバス出力をセット、初期化（4ビットバス設定）コマンド */
             
             EPLS();/* Eをパルス出力する */
             DLWSQ++;/* 次回スタート位置をインクリメント */
@@ -112,7 +113,8 @@ void DCONT(void)
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
-            TSB_PF->DATA |= 0x02;/* LCDデータバス出力をセット、？コマンド */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
+            TSB_PF->DATA |= 0x02;/* LCDデータバス出力をセット、2行コマンド */
             
             EPLS();/* Eをパルス出力する */
             
@@ -142,7 +144,13 @@ void DCONT(void)
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x02;/* LCDデータバス出力をセット、？コマンド */
+            
+            EPLS();/* Eをパルス出力する */
+            
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
+            TSB_PF->DATA |= 0x08;/* LCDデータバス出力をセット、2行コマンド */
             
             EPLS();/* Eをパルス出力する */
             
@@ -172,6 +180,7 @@ void DCONT(void)
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x00;/* LCDデータバス出力をセット、？コマンド */
             
             EPLS();/* Eをパルス出力する */
@@ -206,6 +215,7 @@ void DCONT(void)
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x00;/* LCDデータバス出力をセット、？コマンド */
             
             EPLS();/* Eをパルス出力する */
@@ -240,6 +250,7 @@ void DCONT(void)
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x00;/* LCDデータバス出力をセット、？コマンド */
             
             EPLS();/* Eをパルス出力する */
@@ -274,6 +285,7 @@ void DCONT(void)
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x00;/* LCDデータバス出力をセット、？コマンド */
             
             EPLS();/* Eをパルス出力する */
@@ -336,7 +348,7 @@ void DCONT(void)
             } else {
                 /* 電源OFFか、洗浄工程中であるか、準備中でない場合 */
                 MXOTN6 &= 0xDF;/* 準備LEDをオフする */
-                MX6BLK |= 0xDF;/* 準備LEDの点滅をクリア */
+                MX6BLK &= 0xDF;/* 準備LEDの点滅をクリア */
                 
             }
             
@@ -420,6 +432,11 @@ void DCONT(void)
                     
                 } else if ((DSPSEQ != 4) || ((DSPSEQ == 4) && (DSPSSQ == 0))) {
                     /* 洗浄モードでない、又は洗浄モードであり、メインメニューである場合 */
+                    if ((DSPNO != 7) && (DSPSEQ > 0)) {
+                        /* 設定画面へ変更時であり、画面シーケンスが進んでいた場合 */
+                        DSPSEQ = 0;/* 一度クリア */
+                        
+                    }
                     DSPNO = 7;/* 設定モード表示セット */
                     
                 } else {
@@ -435,15 +452,17 @@ void DCONT(void)
                     STSFL0 &= 0x7F;/* 設定モードフラグを強制リセット */
                     STSFL0 |= 0x20;/* 準備中フラグをリセット */
                     
-                    if (ABNF != ABNFO) {
+                    if ((ABNF & 0x0F) != ABNFO) {
                         /* 異常が変化していた場合 */
                         DSPSEQ = 0;/* 画面シーケンスをクリアする */
                         
                         /* 異常履歴の更新 */
-                        ABNFO = ABNF;/* オールドを更新する */
+                        ABNFO = (ABNF & 0x0F);/* オールドを更新する */
                         
-                        REG_00 = (ABNF & 0x0F);/* 最新異常データ */
-                        REG_01 = (ABNCUT & 0xF0);/* 一個前の異常データ */
+                        REG_00 = ABNF;/* 最新異常データ */
+                        REG_00 &= 0x0F;/* マスク */
+                        REG_01 = ABNCUT;/* 一個前の異常データ */
+                        REG_01 &= 0xF0;/* マスク */
                         
                         ABNCUT &= 0x0F;/* 4～7bit目をクリア */
                         ABNCUT |= (REG_00 << 4);/* 最新データをセットします */
@@ -457,6 +476,7 @@ void DCONT(void)
                         
                         REG_00 = ABNCUT;/* データロード */
                         REG_00 &= 0x0F;/* 異常件数のみマスク */
+                        REG_00 ++;/* 異常件数をインクリメント */
                         
                         if (REG_00 >= 5) {
                             /* 5件以上になる場合 */
@@ -502,6 +522,11 @@ void DCONT(void)
                         /* 設定モードでない場合 */
                         if ((STSFL0 & 0x20) == 0) {
                             /* 準備中の場合 */
+                            if ((DSPNO == 0) && (DSPSEQ > 0)) {
+                                /* OFF -> ON時であり、画面シーケンスが進んでいた場合 */
+                                DSPSEQ = 0;/* 一度クリア */
+                                
+                            }
                             DSPNO = 1;/* 準備中のメッセージセット */
                             
                         } else if ((SYSFLG & 0x1E) == 0) {
@@ -522,6 +547,11 @@ void DCONT(void)
                         /* 設定モードの場合 */
                         if ((DSPSEQ != 4) || ((DSPSEQ == 4) && (DSPSSQ == 0))) {
                             /* 洗浄モードではない場合、又は洗浄モードでメインメニューの場合 */
+                            if ((DSPNO != 7) && (DSPSEQ > 0)) {
+                                /* 設定画面へ変更時であり、画面シーケンスが進んでいた場合 */
+                                DSPSEQ = 0;/* 一度クリア */
+                                
+                            }
                             DSPNO = 7;/* 設定モード表示をセット */
                             
                         } else {
@@ -680,8 +710,7 @@ void DCONT(void)
                 MHEAD1 = DSPLB1;/* メッセージの先頭アドレスをセット */
                 MHEAD1 --;/* アドレスをデクリメント */
                 
-                memcpy(DSPLB2, DSPLB2 + 1, 15);/* 15バイト移動 */
-                DSPLB2[15] = 0x20;/* ' 'セット */
+                memset(DSPLB2, 0x20, 16);
                 DSPLN2 = 16;/* データ長16をセット */
                 MHEAD2 = DSPLB2;/* メッセージの先頭アドレスをセット */
                 MHEAD2 --;/* アドレスをデクリメント */
@@ -726,11 +755,13 @@ void DCONT(void)
                                 /* ブザーフラグがあり、0.4秒以上経過していない場合 */
                                 TSB_PC_DATA_PC2 = 1;/* ブザーオン */
                                 TSB_PC_DATA_PC7 = 1;/* 外部警報出力をオンする */
+                                MXOTN2 |= 0x80;/* ビットをセット */
                                 
                             } else {
                                 /* ブザーフラグが無い、又は0.4以上経過した場合 */
                                 TSB_PC_DATA_PC2 = 0;/* ブザーオフ */
                                 TSB_PC_DATA_PC7 = 0;/* 外部警報出力をオフする */
+                                MXOTN2 &= 0x7F;/* ビットクリア */
                                 
                             }
                             
@@ -973,11 +1004,13 @@ void DCONT(void)
                         /* ブザー要求があり、0.5秒未満である場合 */
                         TSB_PC_DATA_PC2 = 1;/* ブザー出力をオン */
                         TSB_PC_DATA_PC7 = 1;/* 外部警報出力をオン */
+                        MXOTN2 |= 0x80;/* ビットセット */
                         
                     } else {
                         /* ブザー要求が無いか、0.5秒以上経過した場合 */
                         TSB_PC_DATA_PC2 = 0;/* ブザー出力をオフ */
                         TSB_PC_DATA_PC7 = 0;/* 外部警報出力をオフ */
+                        MXOTN2 &= 0x7F;/* ビットクリア */
                         
                     }
                     
@@ -1150,11 +1183,13 @@ void DCONT(void)
                     /* ブザー要求があり、0.5秒未満である場合 */
                     TSB_PC_DATA_PC2 = 1;/* ブザー出力をオン */
                     TSB_PC_DATA_PC7 = 1;/* 外部警報出力をオン */
+                    MXOTN2 |= 0x80;/* ビットセット */
                     
                 } else {
                     /* ブザー要求が無いか、0.5秒以上経過した場合 */
                     TSB_PC_DATA_PC2 = 0;/* ブザー出力をオフ */
                     TSB_PC_DATA_PC7 = 0;/* 外部警報出力をオフ */
+                    MXOTN2 &= 0x7F;/* ビットクリア */
                     
                 }
                 
@@ -1222,26 +1257,30 @@ void DCONT(void)
                 
                 memcpy(DSPLB2, RNSTM1 + 1, 16);/* 品温表示メモリーコピー */
                 
-                if (NPAT == 0) {
-                    /* パターン1の場合 */
-                    REG_00 = PAT1;/* パターン1の温度をセット */
+                if (CCSEQ == 15) {
+                    /* 完了表示タイミングである場合 */
+                    if (NPAT == 0) {
+                        /* パターン1の場合 */
+                        REG_00 = PAT1;/* パターン1の温度をセット */
+                        
+                    } else if (NPAT == 1) {
+                        /* パターン2の場合 */
+                        REG_00 = PAT2;/* パターン2の温度をセット */
+                        
+                    } else if (NPAT == 2) {
+                        /* パターン3の場合 */
+                        REG_00 = PAT3;/* パターン3の温度をセット */
+                        
+                    } else {
+                        /* パターン4の場合 */
+                        REG_00 = PAT4;/* パターン4の温度をセット */
+                        
+                    }
                     
-                } else if (NPAT == 1) {
-                    /* パターン2の場合 */
-                    REG_00 = PAT2;/* パターン2の温度をセット */
-                    
-                } else if (NPAT == 2) {
-                    /* パターン3の場合 */
-                    REG_00 = PAT3;/* パターン3の温度をセット */
-                    
-                } else {
-                    /* パターン4の場合 */
-                    REG_00 = PAT4;/* パターン4の温度をセット */
+                    DSPLB1[12] = NUMDEG2[((REG_00 % 100) / 10)];/* 温度10の位(ゼロは表示しない) */
+                    DSPLB1[13] =  NUMDEG[(REG_00 % 10)];/* 温度1の位 */
                     
                 }
-                
-                DSPLB1[12] = NUMDEG2[((REG_00 % 100) / 10)];/* 温度10の位(ゼロは表示しない) */
-                DSPLB1[13] =  NUMDEG[(REG_00 % 10)];/* 温度1の位 */
                 
                 DSPLB2[11] = NUMDEG2[((TMPDT0 % 100) / 10)];/* 温度10の位(ゼロは表示しない) */
                 DSPLB2[12] =  NUMDEG[(TMPDT0 % 10)];/* 温度1の位 */
@@ -1475,6 +1514,7 @@ void DCONT(void)
                 DSPTM1 = 0;/* タイマ―クリア */
                 STSFL0 &= 0x7F;/* 設定モードの強制解除 */
                 TSB_PC_DATA_PC7 = 1;/* 外部警報出力をオンする */
+                MXOTN2 |= 0x80;/* ビットセット */
                 
             }
             
@@ -1527,6 +1567,7 @@ void DCONT(void)
             if ((ABNF & 0x80) == 0) {
                 /* ブザー出力がオフである場合 */
                 TSB_PC_DATA_PC7 = 0;/* 警報外部出力をオフにする */
+                MXOTN2 &= 0x7F;/* ビットクリア */
                 
             } else {
                 /* ブザー出力がオンになっている場合 */
@@ -2708,6 +2749,7 @@ void DCONT(void)
             TSB_PA_DATA_PA6 = 0;/* RWオフにする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x00;/* LCDデータバス出力をセット、クリアコマンド */
             
             EPLS();/* Eをパルス出力する */
@@ -2745,10 +2787,12 @@ void DCONT(void)
             TSB_PA_DATA_PA6 = 0;/* RWオフにする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x08;/* LCDデータバス出力をセット、1行目コマンド */
             
             EPLS();/* Eをパルス出力する */
             
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x00;/* LCDデータバス出力をセット、1行目コマンド */
             
             EPLS();/* Eをパルス出力する */
@@ -2789,10 +2833,12 @@ void DCONT(void)
             
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= REG_00;/* LCDデータバス出力をセット、データ上位 */
             
             EPLS();/* Eをパルス出力する */
             
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= REG_01;/* LCDデータバス出力をセット、データ下位 */
             
             EPLS();/* Eをパルス出力する */
@@ -2839,12 +2885,15 @@ void DCONT(void)
             /* 2行目を表示する処理 */
             /* 2行目の表示カーソルを合わせる */
             TSB_PA_DATA_PA6 = 0;/* RWオフにする */
+            TSB_PA_DATA_PA7 = 0;/* RSオフにする */
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x0C;/* LCDデータバス出力をセット、2行目コマンド */
             
             EPLS();/* Eをパルス出力する */
             
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= 0x00;/* LCDデータバス出力をセット、2行目コマンド */
             
             EPLS();/* Eをパルス出力する */
@@ -2885,10 +2934,12 @@ void DCONT(void)
             
             TSB_PF->IE &= 0xF0;/* LCDデータバスを非入力にする */
             TSB_PF->CR |= 0x0F;/* LCDデータバスを出力にする */
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= REG_00;/* LCDデータバス出力をセット、データ上位 */
             
             EPLS();/* Eをパルス出力する */
             
+            TSB_PF->DATA &= 0xF0;/* 一旦マスク */
             TSB_PF->DATA |= REG_01;/* LCDデータバス出力をセット、データ下位 */
             
             EPLS();/* Eをパルス出力する */
@@ -2941,10 +2992,10 @@ void DCONT(void)
         }/* スイッチ文はここまで */
         
     }/* ループはここまで */
-        
+    
     OS_LoadTime->NEXT_LOAD_Time[5] = 50;/* 次回呼び出し時間 */
     OS_LoadTime->TSK_COND[5] = 0xA0;/* 遅延フラグ建築 */
-        
+    
     return;/* 戻る */
     
 }
@@ -2957,7 +3008,7 @@ void DCONT(void)
 void EPLS(void)
 {
     TSB_PA_DATA_PA5 = 1;/* E信号をHIGHにする */
-    for (uint8_t i = 0;i < 10;i++) {
+    for (uint8_t i = 0;i < 5;i++) {
         __NOP();/* タイミングずらし */
         
     }
@@ -2977,7 +3028,7 @@ uint8_t EPBSY(void)
     uint8_t REG_00 = 0;/* 一時変数をセット */
     
     TSB_PA_DATA_PA5 = 1;/* E信号をHIGHにする */
-    for (uint8_t i = 0;i < 10;i++) {
+    for (uint8_t i = 0;i < 5;i++) {
         __NOP();/* タイミングずらし */
         
     }
@@ -2985,12 +3036,12 @@ uint8_t EPBSY(void)
     REG_00 &= 0x0F;/* 4bitにマスク */
     TSB_PA_DATA_PA5 = 0;/* E信号をLOWにする */
     
-    for (uint8_t i = 0;i < 10;i++) {
+    for (uint8_t i = 0;i < 5;i++) {
         __NOP();/* タイミングずらし */
         
     }
     TSB_PA_DATA_PA5 = 1;/* E信号をHIGHにする */
-    for (uint8_t i = 0;i < 10;i++) {
+    for (uint8_t i = 0;i < 5;i++) {
         __NOP();/* タイミングずらし */
         
     }

@@ -239,9 +239,9 @@ void INTSBI0_IRQHandler(void)
             /* 受信モードの際(0は受信) */
             /* 「秒分時週日月年」データ読込み */
             if (I2C_RCNT == 0) {
-                RTCDT[I2C_RCNT] = SBI_GetReceiveData(SBIx);/* RTCから読み出したデータ */
+                RTCD_R[I2C_RCNT] = SBI_GetReceiveData(SBIx);/* RTCから読み出したデータ */
             } else if (I2C_RCNT >= 1) {
-                RTCDT[I2C_RCNT - 1] = SBI_GetReceiveData(SBIx);/* RTCから読み出したデータ */
+                RTCD_R[I2C_RCNT - 1] = SBI_GetReceiveData(SBIx);/* RTCから読み出したデータ */
             }
             
             if (I2C_RCNT == 7) {

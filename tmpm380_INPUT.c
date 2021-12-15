@@ -30,8 +30,8 @@ const uint8_t INPUT_ON00 = 0xFF;/* ONとなった時のSW入力値の像 */
 6…運転SW
 7…チラー予約SW
 */
-const uint8_t INPUT_ON01 = 0xF0;/* ONとなった時のPORT入力値の像 */
-/*　水位はLowアクティブ、それ以外はHighアクティブ
+const uint8_t INPUT_ON01 = 0x2F;/* ONとなった時のPORT入力値の像 */
+/* 真空弁閉リミット、圧力センサー、チラー異常はLowアクティブ、それ以外はHighアクティブ
 0･･･常温水槽水位L
 1･･･常温水槽水位H
 2･･･低温水槽水位L
@@ -41,10 +41,10 @@ const uint8_t INPUT_ON01 = 0xF0;/* ONとなった時のPORT入力値の像 */
 6･･･圧力センサー
 7･･･チラー異常信号
 */
-const uint8_t INPUT_ON02 = 0xFF;/* ONとなった時のPORT入力値の像 */
-/*　全てHighアクティブ
-0･･･サーマルトリップ
-1･･･空き
+const uint8_t INPUT_ON02 = 0xF4;/* ONとなった時のPORT入力値の像 */
+/*　High/Lowアクティブ
+0･･･サーマルトリップ(Lowアクティブ)
+1･･･品温センサ断線信号(Lowアクティブ)
 2･･･空き
 3･･･停電信号
 4･･･DSW1
