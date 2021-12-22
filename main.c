@@ -151,7 +151,7 @@ int main(void)
     TSB_PE->IE  |= 0x02;/* 入力にセット */
     
     myUART.BaudRate = (uint32_t)9600;/* ボーレート設定 */
-    myUART.DataBits = UART_DATA_BITS_8;/* ビット幅設定 */
+    myUART.DataBits = UART_DATA_BITS_7;/* ビット幅設定 */
     myUART.StopBits = UART_STOP_BITS_1;/* ストップビット設定 */
     myUART.Parity   = UART_EVEN_PARITY;/* パリティビット設定 */
     myUART.Mode     = UART_ENABLE_TX|UART_ENABLE_RX;/* 送受信モードに設定 */
@@ -343,7 +343,7 @@ void INTRX0_IRQHandler(void)
             
         } else {
             /* 受信長が受信バッファ以内の場合 */
-            RBUF0[(RXPTR0 + RXLEN0) & 0x0FF] = TSB_SC0->BUF;/* 受信バッファに受信データを格納する */
+            RBUF0[(RXPTR0 + RXLEN0) & 0x0FF] = (TSB_SC0->BUF & 0x7F);/* 受信バッファに受信データを格納する */
             RXLEN0++;/* 受信データ長インクリメント */
             
         }

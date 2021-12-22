@@ -138,10 +138,25 @@ void INTTB00_IRQHandler(void)
     } else if ((CCSEQ >= 1) && (CCSEQ < 10)) {
         /* 冷却シーケンスが1以上、10未満である場合 */
         TSB_PE_DATA_PE2 = 1;/* HACCP用冷却工程出力をオンする */
+        HPSHT = 0;
         
     } else {
         /* 冷却シーケンスがそれら値でない場合 */
-        TSB_PE_DATA_PE2 = 0;/* HACCP用冷却工程出力をクリアする */
+        if (TSB_PE_DATA_PE2 == 1) {
+            /* 前回オン出力であった場合 */
+            HPSHT++;/* タイマをインクリメント */
+            if (HPSHT > 100) {
+                /* 100ms経過後 */
+                HPSHT = 0;/* タイマクリア */
+                TSB_PE_DATA_PE2 = 0;/* HACCP用冷却工程出力をクリアする */
+                
+            }
+            
+        } else {
+            /* 前回オフ出力であった場合 */
+            TSB_PE_DATA_PE2 = 0;/* HACCP用冷却工程出力をクリアする */
+            
+        }
         
     }
     
@@ -190,7 +205,7 @@ void INTTB00_IRQHandler(void)
     }
     
     /* 停電入力の検知処理 */
-    if (((MXINO1 & 0x08) > 0) && ((SYSFLG & 0x40) > 0)) {
+    if (((MXIN1 & 0x08) == 0)/*((MXINO1 & 0x08) > 0)*/ && ((SYSFLG & 0x40) > 0)) {
         /* 停電入力があり、電源オンである場合 */
         PDTM2++;/* タイマをインクリメント */
         if (PDTM2 >= 3000) {
@@ -214,13 +229,13 @@ void INTTB00_IRQHandler(void)
             } else {
                 /* 運転ﾋﾞｯﾄがオンである場合 */
                 PDTM++;/* タイマをインクリメント */
-                if (PDTM >= 5) {
-                    /* 5ms以上(応答の遅れを加味して55ms扱い)である場合 */
+                if (PDTM >= 55) {
+                    /* 55ms以上である場合 */
                     STSFL0 |= 0x04;/* 瞬停復帰動作要求フラグをセット */
                     CCTM4 = 0;/* タイマをクリア */
                     
-                    if (PDTM >= 85) {
-                        /* 85ms以上(50msの遅れを加味して135ms扱い)である場合 */
+                    if (PDTM >= 150) {
+                        /* 150ms以上である場合 */
                         STSFL0 &= 0xFB;/* 瞬停復帰動作要求フラグをクリアする */
                         
                         if (((ABNF & 0x0F) == 0) || ((ABNF & 0x0F) == 8) || ((ABNF & 0x0F) == 9)) {
@@ -235,7 +250,7 @@ void INTTB00_IRQHandler(void)
                         
                     }
                     
-                }/* 5ms未満である場合はここに抜ける */
+                }/* 55ms未満である場合はここに抜ける */
                 
             }
             

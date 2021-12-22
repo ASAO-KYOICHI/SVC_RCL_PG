@@ -11,6 +11,7 @@ void DEVICE_INIT(void)
     OS_LoadTime = OSTSKCon1S();/* 関数経由でポインタをOSparamにアクセス */
     
     uint8_t REG_00, REG_01 = 0;/* 一時処理変数 */
+    uint16_t REG_02 = 0;
     
     /* 以下、初期化アプリが実行する処理 */
     WDTCLR();/* 外部ｳｫｯﾁﾄﾞｯｸﾞﾀｲﾏのｸﾘｱ処理 */
@@ -49,7 +50,30 @@ void DEVICE_INIT(void)
             
             if ((~MXIN1 & 0xF0) == DIPBUF) {
                 /* ﾃﾞｨｯﾌﾟｽｲｯﾁの取り込みが正常である場合 */
-                SYKND0 = DIPBUF;/* 機器情報に保存する */
+                /* ディップスイッチのビットが現行と逆になっているため、逆転させる必要がある */
+                /* 7bit目→4bit目 */
+                REG_00 = DIPBUF;/* データをロード */
+                REG_00 >>= 3;/* 3回シフト */
+                REG_00 &= 0x10;/* マスク */
+                REG_01 |= REG_00;/* ORする */
+                /* 6bit目→5bit目 */
+                REG_00 = DIPBUF;/* データをロード */
+                REG_00 >>= 1;/* 1回シフト */
+                REG_00 &= 0x20;/* マスク */
+                REG_01 |= REG_00;/* ORする */
+                /* 5bit目→6bit目 */
+                REG_00 = DIPBUF;/* データをロード */
+                REG_00 <<= 1;/* 1回シフト */
+                REG_00 &= 0x40;/* マスク */
+                REG_01 |= REG_00;/* ORする */
+                /* 4bit目→7bit目 */
+                REG_00 = DIPBUF;/* データをロード */
+                REG_00 <<= 3;/* 1回シフト */
+                REG_00 &= 0x80;/* マスク */
+                REG_01 |= REG_00;/* ORする */
+                
+                SYKND0 = REG_01;/* 機器情報に保存する */
+                REG_00 = REG_01 = 0;/* クリア */
                 break;/* 抜けます */
                 
             }
@@ -670,6 +694,14 @@ void DEVICE_INIT(void)
             
         }
         
+        if (((SYSFLG & 0x60) == 0x20) && (RTCDT[2] == SETTH) && (RTCDT[1] == SETTM)) {
+            /* チラー予約がONで、電源OFFであり、現在時刻がチラー予約時刻と一致する場合 */
+            SYSFLG &= 0xC1;/* MASK */
+            SYSFLG |= 0x40;/* 電源フラグをオン */
+            DSPSEQ = 0;/* 画面シーケンスをクリアする */
+            
+        }
+        
         SBI_I2CState i2c_state;/* I2Cバス状態を見る構造体に名前を付ける */
         
         STSFL0 |= 0x02;/* 初期化完了セット */
@@ -895,12 +927,12 @@ void DEVICE_INIT(void)
                     /* 200回ループ */
                     if (!i2c_state.Bit.BusState) {
                         /* I2Cバスがバスフリーである場合 */
-                        REG_00 = DACOUT;/* DAC出力用変数値をセットする */
+                        REG_02 = DACOUT;/* DAC出力用変数値をセットする */
                         
                         I2CBUF[0] = (DACN_ADDR | 0x00);/* DACｱﾄﾞﾚｽ(write)ｾｯﾄ */
                         I2CBUF[1] = 0x30;/* DAC_Aのレジスタに書き込む命令 */
-                        I2CBUF[2] = (uint8_t)((0x0FF0 & REG_00) >> 4);/* DACに送る上位8ビットｾｯﾄ */
-                        I2CBUF[3] = (uint8_t)((0x000F & REG_00) << 4);/* DACに送る下位4ビットｾｯﾄ */
+                        I2CBUF[2] = (uint8_t)((0x0FF0 & REG_02) >> 4);/* DACに送る上位8ビットｾｯﾄ */
+                        I2CBUF[3] = (uint8_t)((0x000F & REG_02) << 4);/* DACに送る下位4ビットｾｯﾄ */
                         
                         I2C_WCNT = 1;/* 送信前にカウントを加算する */
                         SBI_SetSendData(TSB_SBI0, I2CBUF[0]);/* スタート後、DACアドレスを送る。書込み */

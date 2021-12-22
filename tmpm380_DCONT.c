@@ -1786,7 +1786,7 @@ void DCONT(void)
                 MHEAD1 = DSMD14;/* 1行目のメッセージセット */
                 
                 DSPLN2 = DSMD15[0];/* データ長セット */
-                memcpy(DSPLB1, DSMD15 + 1, 16);/* メモリーコピー */
+                memcpy(DSPLB2, DSMD15 + 1, 16);/* メモリーコピー */
                 
                 /* 年 */
                 DSPLB2[2] =  NUMDEG[((EDDT[4] % 100) / 10)];/* 10の位 */
@@ -2165,6 +2165,7 @@ void DCONT(void)
                 STSTM1++;/* タイマインクリメント */
                 if (STSTM1 >= 10) {
                     /* 0.5秒経過した場合 */
+                    STSTM1 = 0;
                     MXOTN6 >>= 1;/* 1bitシフト */
                     
                     if (MXOTN6 == 0) {
@@ -2247,7 +2248,7 @@ void DCONT(void)
                         MXOTN0 <<= 1;/* 1ﾋﾞｯﾄ左シフト */
                         if (MXOTN0 == 0) {
                             /* ゼロになる場合 */
-                            MXOTN1 |= 0x02;/* 冷却槽排水弁出力セット */
+                            MXOTN1 = 0x02;/* 冷却槽排水弁出力セット */
                             
                         }
                         
@@ -2257,7 +2258,7 @@ void DCONT(void)
                         
                         if (MXOTN1 == 0) {
                             /* ゼロになる場合 */
-                            MXOTN2 |= 0x08;/* チラー循環Pをセット */
+                            MXOTN2 = 0x08;/* チラー循環Pをセット */
                             
                         }
                         
@@ -2281,12 +2282,12 @@ void DCONT(void)
                 
                 REG_00 = TSB_PN->DATA;/* 現在の出力を読み出す */
                 REG_00 &= 0x01;/* 0ビット目は残すようにマスク */
-                REG_00 |= MXOTN1;/* ORする */
+                REG_00 |= (MXOTN1 & 0xFE);/* ORする */
                 TSB_PN->DATA = REG_00;/* 出力更新 */
                 
                 REG_00 = TSB_PC->DATA;/* 現在の出力を読み出す */
                 REG_00 &= 0x07;/* 0ビット目は残すようにマスク */
-                REG_00 |= MXOTN2;/* ORする */
+                REG_00 |= (MXOTN2 & 0xF8);/* ORする */
                 TSB_PC->DATA = REG_00;/* 出力更新 */
                 
                 /* 画面データをセットする */
@@ -2311,8 +2312,8 @@ void DCONT(void)
                 
                 if (SUBTNO < 9) {
                     /* MXINO0の確認の場合 */
-                    if ((MXINO0 == BITPOS) && (MXINO1 == 0)) {
-                        /* 一致する場合 */
+                    if (((MXINO0 ^ 0x0F) == BITPOS) && ((MXINO1 ^ 0xF0) == 0)) {
+                        /* 一致する場合(反転が必要な箇所はXORで反転させている) */
                         TSB_PC_DATA_PC2 = 1;/* ブザーオン */
                         
                         SUBTNO++;/* テストナンバーインクリメント */
@@ -2334,7 +2335,7 @@ void DCONT(void)
                     
                 } else {
                     /* MXINO1の確認の場合 */
-                    if ((MXINO1 == BITPOS) && (MXINO0 == 0)) {
+                    if (((MXINO1 ^ 0xF0) == BITPOS) && ((MXINO0 ^ 0x0F) == 0)) {
                         /* 一致する場合 */
                         TSB_PC_DATA_PC2 = 1;/* ブザーオン */
                         
@@ -2370,7 +2371,7 @@ void DCONT(void)
                     /* ディップスイッチの確認である場合 */
                     DSPLN2 = TSTMSB[0];/* データ長セット */
                     memcpy(DSPLB2, TSTMSB + 1, 16);/* メモリーコピー */
-                    DSPLB2[14] = NUMDEG[ 4 - (SUBTNO - 13) ];/* 数字を文字にコンバート */
+                    DSPLB2[14] = NUMDEG[ (SUBTNO - 12)/*4 - (SUBTNO - 13)*/ ];/* 数字を文字にコンバート */
                     
                     MHEAD2 = DSPLB2;/* 先頭アドレスセット */
                     MHEAD2 --;/* アドレスデクリメント */
@@ -2384,7 +2385,7 @@ void DCONT(void)
                 /* A/D595 ALARMの確認である場合 */
                 TSB_PC_DATA_PC2 = 0;/* ブザー出力をクリアする */
                 
-                if ((MXINO1 == 0x02) && (MXINO0 == 0)) {
+                if (((MXINO1 ^ 0xF0) == 0x02) && ((MXINO0 ^ 0x0F) == 0)) {
                     /* 断線信号が入った場合 */
                     TSB_PC_DATA_PC2 = 1;/* ブザーオン */
                     SUBTNO = 0;/* クリア */
@@ -2408,7 +2409,7 @@ void DCONT(void)
                 if (SUBTNO == 0) {
                     /* 最初の場合 */
                     TBUF0[0] = 0x0F;/* 送信データセット */
-                    TBUF0[1] = 0xF0;/* 送信データセット */
+                    TBUF0[1] = 0x70;/* 送信データセット */
                     
                     /* 送信前準備 */
                     TXPTR0 = 0;/* ポインタゼロ */
@@ -2438,7 +2439,7 @@ void DCONT(void)
                 } else {
                     /* 結果確認 */
                     if (((TXFLG0 & 0x20) > 0) && ((TXFLG0 & 0x11) == 0) && (RXLEN0 == 2)
-                    && (RBUF0[(RXPTR0 + 0) & 0x0FF] == 0x0F) && (RBUF0[(RXPTR0 + 1) & 0x0FF] == 0xF0)) {
+                    && (RBUF0[(RXPTR0 + 0) & 0x0FF] == 0x0F) && (RBUF0[(RXPTR0 + 1) & 0x0FF] == 0x70)) {
                         /* 送信バッファエンプティで、送信中送信フラグがオフであり、受信数が2で
                         期待通りの受信データであった場合 */
                         TSB_PC_DATA_PC2 = 1;/* ブザーオン */
@@ -2668,8 +2669,8 @@ void DCONT(void)
                 } else if (SUBTNO == 1) {
                     /* 2番目のシーケンスである場合 */
                     STSTM1++;/* タイマインクリメント */
-                    if (STSTM1 >= 20) {
-                        /* 1秒経過した場合 */
+                    if (STSTM1 >= 40) {
+                        /* 2秒経過した場合 */
                         TSB_PC_DATA_PC2 = 1;/* ブザーオン */
                         STSTM1 = 0;/* タイマクリア */
                         SUBTNO = 2;/* 次へ */
@@ -2693,11 +2694,11 @@ void DCONT(void)
                 } else if (SUBTNO == 2) {
                     /* 3番目のシーケンスである場合 */
                     STSTM1++;/* タイマインクリメント */
-                    if (STSTM1 >= 20) {
-                        /* 1秒経過した場合 */
+                    if (STSTM1 >= 40) {
+                        /* 2秒経過した場合 */
                         TSB_PC_DATA_PC2 = 1;/* ブザーオン */
                         STSTM1 = 0;/* タイマクリア */
-                        SUBTNO = 0;/* 最初へ戻る */
+                        SUBTNO = 3;/* 次の確認へ */
                         
                     }
                     
@@ -2709,6 +2710,107 @@ void DCONT(void)
                     
                     memcpy(DSPLB2, TSTMSD + 1, 16);/* メモリーコピー */
                     DSPLB2[11] = NUMDEG[2];/* 文字データ「２」セット */
+                    MHEAD2 = DSPLB2;/* 先頭アドレスをセット */
+                    MHEAD2 --;/* アドレスデクリメント */
+                    
+                    DLWSQ = 29;/* 1,2行目表示から開始 */
+                    i = 0;/* 再度ループ入りなおし可 */
+                    
+                } else if (SUBTNO == 3) {
+                    /* 4番目のシーケンスである場合 */
+                    STSTM1++;/* タイマインクリメント */
+                    if (STSTM1 >= 40) {
+                        /* 2秒経過した場合 */
+                        TSB_PC_DATA_PC2 = 1;/* ブザーオン */
+                        STSTM1 = 0;/* タイマクリア */
+                        SUBTNO = 4;/* 次の確認へ */
+                        
+                    }
+                    
+                    TSB_PE->DATA &= 0xFB;/* 冷却出力をオフにする */
+                    
+                    DSPLN1 = TSTTOP[0];/* データ長をセット */
+                    MHEAD1 = TSTTOP;/* 先頭アドレスをセット */
+                    DSPLN2 = TSTMSD[0];/* データ長をセット */
+                    
+                    memcpy(DSPLB2, TSTMSD + 1, 16);/* メモリーコピー */
+                    DSPLB2[11] = NUMDEG[3];/* 文字データ「３」セット */
+                    MHEAD2 = DSPLB2;/* 先頭アドレスをセット */
+                    MHEAD2 --;/* アドレスデクリメント */
+                    
+                    DLWSQ = 29;/* 1,2行目表示から開始 */
+                    i = 0;/* 再度ループ入りなおし可 */
+                    
+                } else if (SUBTNO == 4) {
+                    /* 5番目のシーケンスである場合 */
+                    STSTM1++;/* タイマインクリメント */
+                    if (STSTM1 >= 50) {
+                        /* 2.5秒経過した場合 */
+                        TSB_PC_DATA_PC2 = 1;/* ブザーオン */
+                        STSTM1 = 0;/* タイマクリア */
+                        SUBTNO = 0;/* サブシーケンスクリア */
+                        TNO = 13;/* 次の確認へ */
+                        
+                    }
+                    
+                    TSB_PE->DATA &= 0xF3;/* 冷却・異常出力をオフにする */
+                    
+                    DSPLN1 = TSTTOP[0];/* データ長をセット */
+                    MHEAD1 = TSTTOP;/* 先頭アドレスをセット */
+                    DSPLN2 = TSTMSD[0];/* データ長をセット */
+                    
+                    memcpy(DSPLB2, TSTMSD + 1, 16);/* メモリーコピー */
+                    DSPLB2[11] = NUMDEG[4];/* 文字データ「４」セット */
+                    MHEAD2 = DSPLB2;/* 先頭アドレスをセット */
+                    MHEAD2 --;/* アドレスデクリメント */
+                    
+                    DLWSQ = 29;/* 1,2行目表示から開始 */
+                    i = 0;/* 再度ループ入りなおし可 */
+                    
+                }
+                
+            } else if (TNO == 13) {
+                /* DAC出力値 / 停電入力の確認である場合 */
+                TSB_PC_DATA_PC2 = 0;/* ブザー出力をクリアする */
+                
+                if (SUBTNO == 0) {
+                    /* 最初のシーケンスである場合 */
+                    STSTM1++;/* タイマインクリメント */
+                    if (STSTM1 >= 10) {
+                        /* 0.5秒経過した場合 */
+                        TSB_PC_DATA_PC2 = 1;/* ブザーオン */
+                        STSTM1 = 0;/* タイマクリア */
+                        SUBTNO = 1;/* 次へ */
+                        
+                    }
+                    
+                    DSPLN1 = TSTTOP[0];/* データ長をセット */
+                    MHEAD1 = TSTTOP;/* 先頭アドレスをセット */
+                    DSPLN2 = TSTMSE[0];/* データ長をセット */
+                    MHEAD2 = TSTMSE;/* 先頭アドレスをセット */
+                    
+                    DLWSQ = 29;/* 1,2行目表示から開始 */
+                    i = 0;/* 再度ループ入りなおし可 */
+                    
+                } else {
+                    /* 2番目以降のシーケンスである場合 */
+                    DSPLN1 = TSTTOP[0];/* データ長をセット */
+                    MHEAD1 = TSTTOP;/* 先頭アドレスをセット */
+                    DSPLN2 = TSTMSE[0];/* データ長をセット */
+                    
+                    memcpy(DSPLB2, TSTMSE + 1, 16);/* メモリーコピー */
+                    DSPLB2[4] = NUMDEG[((DACOUT % 10000) / 1000)];/* 数字の文字データセット1 */
+                    DSPLB2[5] = NUMDEG[((DACOUT % 1000) / 100)];/* 数字の文字データセット2 */
+                    DSPLB2[6] = NUMDEG[((DACOUT % 100) / 10)];/* 数字の文字データセット3 */
+                    DSPLB2[7] = NUMDEG[(DACOUT % 10)];/* 数字の文字データセット4 */
+                    
+                    if ((MXINO1 & 0x08) > 0) {
+                        /* 停電入力がある場合 */
+                        DSPLB2[13] = 'N';/* ONのN */
+                        DSPLB2[14] = ' ';/* OFFのFを消す */
+                        
+                    }
+                    
                     MHEAD2 = DSPLB2;/* 先頭アドレスをセット */
                     MHEAD2 --;/* アドレスデクリメント */
                     

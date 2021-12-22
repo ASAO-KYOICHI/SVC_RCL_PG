@@ -129,5 +129,6 @@ extern const uint8_t TSTMSA[17];/* 異常 MESSAGE */
 extern const uint8_t TSTMSB[17];/* DIP SWの確認 MESSAGE */
 extern const uint8_t TSTMSC[17];/* 電源ｵﾌ/ｵﾝ要求 */
 extern const uint8_t TSTMSD[17];/* HACCP用接点出力確認 */
+extern const uint8_t TSTMSE[17];/* DAC出力/停電入力確認 */
 
 #endif

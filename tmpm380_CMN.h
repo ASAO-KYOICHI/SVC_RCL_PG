@@ -16,6 +16,7 @@
 extern uint8_t  kidou;/* 起動後初期化にてﾃﾞｨｯﾌﾟｽｲｯﾁの確認で使用するﾌﾗｸﾞ変数 */
 extern uint8_t  count01;/* 起動後初期化時にﾃﾞｨｯﾌﾟｽｲｯﾁの確認で使用するｶｳﾝﾄｱｯﾌﾟ変数 */
 extern uint8_t  ERRFG;/* エラーチェック用のフラグ */
+extern uint16_t HPSHT;/* HACCP運転出力遅延タイマ（チャタリングキャンセル用） */
 
 extern uint8_t  STSFL0;/* システム制御フラグ0 */
 extern uint8_t  STSFL1;/* システム制御フラグ1 */
