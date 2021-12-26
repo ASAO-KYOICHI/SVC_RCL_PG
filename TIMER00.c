@@ -145,8 +145,8 @@ void INTTB00_IRQHandler(void)
         if (TSB_PE_DATA_PE2 == 1) {
             /* 前回オン出力であった場合 */
             HPSHT++;/* タイマをインクリメント */
-            if (HPSHT > 100) {
-                /* 100ms経過後 */
+            if (HPSHT > 1000) {
+                /* 1000ms経過後 */
                 HPSHT = 0;/* タイマクリア */
                 TSB_PE_DATA_PE2 = 0;/* HACCP用冷却工程出力をクリアする */
                 
