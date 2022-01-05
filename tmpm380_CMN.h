@@ -206,6 +206,8 @@ extern uint8_t CRTCDT;/* RTC CHECK用OLD DATA */
 extern uint8_t MDAST;/* 手動排水操作受付ﾀｲﾏ */
 extern uint8_t DLWSQ;/* DCONTの次回スタート位置を決める場所 */
 extern uint8_t DPOUT;/* LCD/VFDの表示回数 */
+extern uint8_t FLZFG;/* LCD/VFDのフリーズフラグ */
+extern uint32_t FLZTM;/* LCD/VFDのフリーズタイマ：1～5分(60000ms～300000ms) */
 
 /* 操作制御で使用する変数類 */
 extern uint8_t  KFLG;/* ｵﾝﾄﾘｶﾞﾃﾞｰﾀ作成用 */

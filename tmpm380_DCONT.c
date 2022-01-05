@@ -103,11 +103,20 @@ void DCONT(void)
                 /* ビジーフラグがオンである場合 */
                 OS_LoadTime->NEXT_LOAD_Time[5] = 1;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0xA0;/* 遅延フラグ建築 */
+                
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
                     
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ++;/* 次回スタート位置をインクリメント */
             
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
@@ -134,11 +143,20 @@ void DCONT(void)
                 /* ビジーフラグがオンである場合 */
                 OS_LoadTime->NEXT_LOAD_Time[5] = 1;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0xA0;/* 遅延フラグ建築 */
+                
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
                     
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ++;/* 次回スタート位置をインクリメント */
             
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
@@ -170,11 +188,20 @@ void DCONT(void)
                 /* ビジーフラグがオンである場合 */
                 OS_LoadTime->NEXT_LOAD_Time[5] = 1;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0xA0;/* 遅延フラグ建築 */
+                
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
                     
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ++;/* 次回スタート位置をインクリメント */
             
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
@@ -205,11 +232,20 @@ void DCONT(void)
                 /* ビジーフラグがオンである場合 */
                 OS_LoadTime->NEXT_LOAD_Time[5] = 1;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0xA0;/* 遅延フラグ建築 */
+                
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
                     
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ++;/* 次回スタート位置をインクリメント */
             
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
@@ -240,11 +276,20 @@ void DCONT(void)
                 /* ビジーフラグがオンである場合 */
                 OS_LoadTime->NEXT_LOAD_Time[5] = 1;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0xA0;/* 遅延フラグ建築 */
+                
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
                     
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ++;/* 次回スタート位置をインクリメント */
             
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
@@ -275,11 +320,20 @@ void DCONT(void)
                 /* ビジーフラグがオンである場合 */
                 OS_LoadTime->NEXT_LOAD_Time[5] = 1;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0xA0;/* 遅延フラグ建築 */
+                
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
                     
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ++;/* 次回スタート位置をインクリメント */
             
             TSB_PA_DATA_PA6 = 0;/* RWをオフする */
@@ -2839,10 +2893,19 @@ void DCONT(void)
                 OS_LoadTime->NEXT_LOAD_Time[5] = 0;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0x80;/* 遅延フラグ建築 */
                 
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
+                    
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ++;/* 番号インクリメント */
             /* ブレークは書かない */
             
@@ -2874,10 +2937,19 @@ void DCONT(void)
                 OS_LoadTime->NEXT_LOAD_Time[5] = 0;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0x80;/* 遅延フラグ建築 */
                 
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
+                    
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ = 31;/* 番号を31にする */
             i = 0;/* クリア */
             continue;/* ループ先頭に戻る */
@@ -2913,10 +2985,19 @@ void DCONT(void)
                 OS_LoadTime->NEXT_LOAD_Time[5] = 0;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0x80;/* 遅延フラグ建築 */
                 
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
+                    
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ++;/* 番号インクリメント */
             /* ブレークは書かない */
             
@@ -2960,10 +3041,19 @@ void DCONT(void)
                 OS_LoadTime->NEXT_LOAD_Time[5] = 0;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0x80;/* 遅延フラグ建築 */
                 
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
+                    
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             if (DSPLN1 > 0) {
                 /* 1以上の場合 */
                 DSPLN1--;/* デクリメント */
@@ -3014,10 +3104,19 @@ void DCONT(void)
                 OS_LoadTime->NEXT_LOAD_Time[5] = 0;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0x80;/* 遅延フラグ建築 */
                 
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
+                    
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             DLWSQ++;/* 番号インクリメント */
             /* ブレークは書かない */
             
@@ -3061,10 +3160,19 @@ void DCONT(void)
                 OS_LoadTime->NEXT_LOAD_Time[5] = 0;/* 次回呼び出し時間 */
                 OS_LoadTime->TSK_COND[5] = 0x80;/* 遅延フラグ建築 */
                 
+                FLZFG |= 0x01;/* フラグセット */
+                if (FLZTM >= 60000) {
+                    /* 1分以上経過した場合 */
+                    FLZFG = DLWSQ = 0;/* やり直し */
+                    FLZTM = 0;/* タイマクリア */
+                    
+                }
+                
                 return;/* 戻る */
                 
             }
             
+            FLZFG = 0;/* クリア */
             if (DSPLN2 > 0) {
                 /* 1以上の場合 */
                 DSPLN2--;/* デクリメント */
